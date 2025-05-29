@@ -137,3 +137,145 @@ This project is licensed under the MIT License - see the LICENSE.md file for det
 DISCLAIMER
 ----------
 This tool is for educational and analytical purposes. Please use responsibly and be mindful of Amazon's terms of service. The developers are not responsible for any misuse of this tool or for any actions taken by Amazon as a result of its use. Scraping websites can be resource-intensive; use with consideration.
+
+
+====================================================
+Ferramenta de Inteligência de Mercado para Mais Vendidos da Amazon
+====================================================
+
+VISÃO GERAL
+-----------
+Obtenha uma vantagem competitiva decisiva para o seu negócio de e-commerce, automatizando a análise de concorrentes e de mercado na Amazon. Esta ferramenta de inteligência de mercado é projetada para proprietários de lojas, analistas e profissionais de marketing que precisam de dados precisos e acionáveis para tomar decisões estratégicas. Ela automatiza a tediosa tarefa de coleta de dados das páginas de "Mais Vendidos" da Amazon, economizando horas de trabalho manual para que você possa focar no que realmente importa: o crescimento do seu negócio. Esta versão prioriza a confiabilidade e a extração abrangente de dados.
+
+COMO FUNCIONA: UM PROCESSO ROBUSTO EM DUAS ETAPAS
+-------------------------------------------------
+Esta ferramenta utiliza um processo refinado em duas etapas para garantir a maior taxa de sucesso possível na extração de dados:
+
+Etapa 1: Análise da Página Principal (com Assistência Manual para CAPTCHA e Paginação)
+1. Uma janela do navegador Firefox será aberta automaticamente, navegando para a página de "Mais Vendidos" da Amazon que você configurou no script.
+2. O script exibirá uma mensagem no terminal, aguardando que VOCÊ resolva manualmente quaisquer desafios CAPTCHA que a Amazon possa apresentar na janela do navegador. Este passo de intervenção humana é crucial para contornar as principais defesas da Amazon.
+3. Uma vez que a página (e qualquer CAPTCHA) é processada, a ferramenta extrai os links dos produtos mais vendidos.
+4. Paginação: O script tentará então navegar para as páginas subsequentes ("Próxima página") para coletar mais links de produtos, até o limite definido em `MAX_PRODUCTS_TO_FETCH` ou até não haver mais páginas (o que ocorrer primeiro, respeitando também um limite de segurança `MAX_PAGES_TO_SCRAPE`).
+
+Etapa 2: Extração Individual de Produtos (Headless, Sequencial e Estável)
+1. Para cada link de produto único encontrado na Etapa 1, o script inicia uma instância separada e invisível ("headless") do navegador Firefox.
+2. Para garantir máxima estabilidade e evitar sobrecarregar os servidores da Amazon ou seu sistema, os produtos são processados UM POR UM (sequencialmente).
+3. Ele extrai cuidadosamente os dados chave (Título, Preço, URL) de cada página de produto. Um tempo de espera generoso (40 segundos) é usado para aguardar o carregamento do título do produto, aumentando a chance de extração bem-sucedida em páginas mais lentas.
+4. Um pequeno atraso aleatório é introduzido entre o processamento de cada produto.
+5. Assim como a Etapa 1, esta etapa também pode utilizar seu perfil existente do Firefox (se encontrado) para consistência, o que é seguro no modo sequencial.
+6. Se uma página de produto falhar ao carregar seu título dentro do tempo limite, ou se ocorrer um erro, o script registra a falha e salva um instantâneo HTML da página para depuração (ex: `debug_timeout_IDPRODUTO.html`).
+
+PRINCIPAIS CARACTERÍSTICAS
+--------------------------
+* Extração de Dados Confiável: O processo de duas etapas com resolução manual de CAPTCHA e processamento sequencial estável na Etapa 2 (com timeouts generosos) aumenta drasticamente a confiabilidade e completude da coleta de dados.
+* Suporte à Paginação: Coleta produtos de múltiplas páginas das listas de mais vendidos para dados mais abrangentes.
+* Usa Seu Perfil do Firefox: O script pode utilizar seu perfil existente do Firefox (se encontrado), aproveitando cookies e dados de sessão, o que pode ajudar a parecer um usuário regular e potencialmente reduzir a frequência de CAPTCHAs.
+* Suporte Multi-Marketplace: Analise qualquer marketplace da Amazon (ex: .com, .co.uk, .de, .com.br) simplesmente alterando a `AMAZON_BEST_SELLERS_URL` na área de configuração do script.
+* Limites Configuráveis: Controle o número máximo de produtos a serem buscados (`MAX_PRODUCTS_TO_FETCH`) e de páginas a serem varridas (`MAX_PAGES_TO_SCRAPE`).
+* Opção para Desabilitar Imagens: `DISABLE_IMAGES_SELENIUM` está configurado como `True` por padrão para potencialmente acelerar o carregamento das páginas durante a raspagem.
+* Relatórios em Duplo Formato:
+    * Saída CSV (ex: `historico_precos_BR_auto.csv`): Um log CSV completo de todos os produtos que o script tentou processar, incluindo uma coluna 'Status' (Sucesso/Falha), título completo, preço e URL, para transparência e depuração.
+    * Saída PDF (ex: `Relatorio_Mais_Vendidos_BR_auto.pdf`): Um relatório PDF limpo e profissional contendo apenas os produtos extraídos com sucesso (Título e Preço), perfeito para revisões rápidas e compartilhamento.
+* Arquivos HTML para Debug: Salva o conteúdo HTML de páginas onde a extração de dados falha (ex: devido a timeout), auxiliando na solução de problemas.
+
+PONTOS DE DADOS COLETADOS
+------------------------
+Para cada produto processado com sucesso, a ferramenta extrai:
+* Título do Produto
+* Preço Atual (formatado para a moeda correta, ex: R$ para o Brasil)
+* URL Direta para a Página do Produto
+
+COMO COMEÇAR (GUIA RÁPIDO)
+---------------------------
+Siga estes passos para colocar a ferramenta em funcionamento:
+
+Pré-requisitos:
+* Python 3.8+ instalado.
+* Navegador Mozilla Firefox instalado.
+* Geckodriver: Baixe o `geckodriver` compatível com sua versão do Firefox.
+    * Releases oficiais: https://github.com/mozilla/geckodriver/releases
+    * Por exemplo, para Firefox v115 e Windows 64-bit, você pode usar o geckodriver v0.34.0.
+    * Extraia o arquivo ZIP baixado.
+    * IMPORTANTE: Coloque o arquivo `geckodriver.exe` na MESMA PASTA que o seu script Python (ex: `amazon_tracker_auto.py`).
+
+Instalação (Bibliotecas Python):
+Abra seu terminal (PowerShell, CMD ou Git Bash) e instale as bibliotecas Python necessárias executando:
+`pip install pandas beautifulsoup4 selenium fpdf2` 
+*(Nota: Usamos fpdf2 pois é o sucessor moderno do fpdf e inclui `fpdf.enums`)*
+
+Alternativamente, se um arquivo `requirements.txt` for fornecido com o projeto, você pode executar:
+`pip install -r requirements.txt`
+(Você pode criar um arquivo `requirements.txt` com o seguinte conteúdo:
+pandas
+beautifulsoup4
+selenium
+fpdf2
+)
+
+Configuração:
+Este é um passo crucial. Abra seu arquivo de script Python (ex: `amazon_tracker_auto.py`) em um editor de texto. Todas as configurações principais estão no topo do arquivo:
+
+* `CSV_OUTPUT_FILE`: Padrão 'historico_precos_BR_auto.csv'. Você pode alterar.
+* `PDF_OUTPUT_FILE`: Padrão 'Relatorio_Mais_Vendidos_BR_auto.pdf'. Você pode alterar.
+* `AMAZON_BEST_SELLERS_URL`: **MUITO IMPORTANTE!** Altere esta URL para a página da categoria de "Mais Vendidos" da Amazon que você deseja analisar.
+* `MAX_PRODUCTS_TO_FETCH`: Número máximo de produtos que o script tentará coletar. Padrão: 100.
+* `MAX_PAGES_TO_SCRAPE`: Limite de segurança para quantas páginas de mais vendidos o script tentará navegar. Padrão: 10.
+* `MAX_WORKERS_STAGE_2`: Número de workers paralelos para a Etapa 2. **Configurado como 1 para máxima estabilidade (configuração atual recomendada)**. Aumentar este valor demonstrou levar a instabilidade e travamentos.
+* `GECKODRIVER_PATH`: Deve ser `"geckodriver.exe"` se o arquivo estiver na mesma pasta do script.
+* `DISABLE_IMAGES_SELENIUM`: Configure como `True` para desabilitar o carregamento de imagens (mais rápido), ou `False` para carregar imagens. Padrão: `True`.
+
+Exemplos de configurações de `AMAZON_BEST_SELLERS_URL`:
+* Para Eletrônicos no Brasil: `"https://www.amazon.com.br/gp/bestsellers/electronics/"`
+* Para Livros nos EUA: `"https://www.amazon.com/gp/bestsellers/books/"`
+* Para Videogames no Reino Unido: `"https://www.amazon.co.uk/gp/bestsellers/videogames/"`
+
+Execução:
+1. Certifique-se de que o `geckodriver.exe` está na mesma pasta do seu script Python.
+2. Abra seu terminal (PowerShell, CMD ou Git Bash).
+3. Navegue até o diretório onde seu script está salvo. Por exemplo:
+   `cd "C:\Users\Administrador\Desktop\PROJETO ESPECIALIS E-COMMERCE"`
+4. Execute o script usando:
+   `python seu_nome_de_script.py`
+   (Substitua `seu_nome_de_script.py` pelo nome real do seu arquivo, ex: `amazon_tracker_auto.py`)
+
+O que Esperar Durante a Execução:
+1. Uma janela do navegador Firefox aparecerá e navegará para a URL da Amazon.
+2. Verifique seu terminal. Ele exibirá mensagens. Crucialmente, ele pausará e solicitará que você:
+   `>>> Se a página pedir um CAPTCHA, resolva-o MANUALMENTE para continuar. <<<`
+3. Olhe para a janela do Firefox. Se houver um CAPTCHA (o desafio de "digite os caracteres"), resolva-o no navegador.
+4. Após o CAPTCHA ser resolvido (ou se nenhum aparecer), o script detectará a lista de produtos e prosseguirá para a Etapa 1 (coleta de links com paginação).
+5. Após a Etapa 1, a janela do Firefox fechará.
+6. A Etapa 2 (extração individual de dados de produtos) começará, com o progresso impresso no terminal. Esta etapa usa navegadores invisíveis (headless).
+7. Quando o script terminar, você encontrará os arquivos de relatório `.csv` e `.pdf` na pasta do projeto.
+
+ARQUIVOS DE SAÍDA
+-----------------
+* **[NomeConfiguradoCSV].csv**: Contém todos os produtos para os quais a extração de dados foi TENTADA. Inclui colunas para Timestamp, Título (ou mensagem de erro se falhou), Preço, URL e um Status ('Sucesso' ou 'Falha').
+* **[NomeConfiguradoPDF].pdf**: Um relatório formatado listando apenas os produtos EXTRAÍDOS COM SUCESSO com seus títulos e preços.
+
+NOTAS IMPORTANTES / SOLUÇÃO DE PROBLEMAS
+---------------------------------------
+* **Geckodriver é Essencial:** O script mostrará um erro crítico se o `geckodriver.exe` não for encontrado na mesma pasta do script. Verifique novamente sua localização.
+* **CAPTCHA Manual:** Sua intervenção na Etapa 1 para CAPTCHAs é fundamental para o sucesso do script.
+* **Tempo de Execução:** Esta versão do script prioriza a confiabilidade. Com `MAX_WORKERS_STAGE_2 = 1` (processamento sequencial para produtos individuais) e timeouts generosos (40 segundos por página de produto na Etapa 2), o script pode levar um tempo para rodar, especialmente se buscando muitos produtos ou se muitas páginas carregarem lentamente. Esta é uma troca para alcançar uma alta taxa de sucesso.
+* **Mudanças no Site da Amazon:** A Amazon frequentemente atualiza a estrutura do seu site. Se o script parar de funcionar subitamente ou falhar na extração de dados, os seletores CSS usados para encontrar elementos (como links de produtos, títulos, preços ou botões de paginação) podem precisar ser atualizados no código Python.
+* **Arquivos HTML de Debug:** Se o script relatar `Timeout` ou `Title not found` para produtos específicos, ele tentará salvar um arquivo HTML (ex: `debug_timeout_IDPRODUTO.html`). Esses arquivos podem ser abertos em um navegador para ver o que o script visualizou e ajudar a diagnosticar por que falhou para aquela página.
+
+TECNOLOGIAS UTILIZADAS
+----------------------
+* Python 3
+* Selenium (com Firefox/Geckodriver)
+* BeautifulSoup4
+* Pandas
+* FPDF2 (para geração de PDF)
+
+LICENÇA
+-------
+(Considere adicionar uma licença se você planeja compartilhar isso publicamente, ex: Licença MIT. Se não, você pode omitir esta seção ou declarar "Proprietário".)
+
+Exemplo:
+Este projeto está licenciado sob a Licença MIT - veja o arquivo LICENSE.md para detalhes (se você criar um).
+
+AVISO LEGAL
+-----------
+Esta ferramenta é para fins educacionais e analíticos. Por favor, use com responsabilidade e esteja ciente dos termos de serviço da Amazon. Os desenvolvedores não são responsáveis por qualquer mau uso desta ferramenta ou por quaisquer ações tomadas pela Amazon como resultado de seu uso. A raspagem de sites pode consumir muitos recursos; use com consideração.
